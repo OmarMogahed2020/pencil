@@ -1,0 +1,221 @@
+/* Dark Github Theme for Pencil */
+
+QMainWindow {
+    background-color: #0d1117;
+}
+
+QMenuBar {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    border-bottom: 1px solid #30363d;
+    padding: 2px;
+}
+
+QMenuBar::item {
+    background-color: transparent;
+    padding: 4px 10px;
+    border-radius: 3px;
+}
+
+QMenuBar::item:selected {
+    background-color: #161b22;
+    color: #c9d1d9;
+}
+
+QMenuBar::item:pressed {
+    background-color: #58a6ff;
+    color: #0d1117;
+}
+
+QToolBar {
+    background-color: #0d1117;
+    border-bottom: 1px solid #30363d;
+    spacing: 4px;
+    padding: 4px;
+}
+
+QToolBar::separator {
+    background-color: #30363d;
+    width: 1px;
+    height: 20px;
+    margin: 4px 4px;
+}
+
+QToolBar::handle {
+    background-color: transparent;
+}
+
+QToolBar QToolButton {
+    background-color: transparent;
+    border: none;
+    color: #c9d1d9;
+    padding: 4px 8px;
+    border-radius: 3px;
+    min-width: 24px;
+}
+
+QToolBar QToolButton:hover {
+    background-color: #161b22;
+    color: #c9d1d9;
+}
+
+QToolBar QToolButton:pressed {
+    background-color: #58a6ff;
+    color: #0d1117;
+}
+
+QToolBar QToolButton:checked {
+    background-color: #58a6ff;
+    color: #0d1117;
+}
+
+QMenu {
+    background-color: #161b22;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    padding: 4px;
+}
+
+QMenu::item {
+    background-color: transparent;
+    padding: 6px 24px;
+    border-radius: 3px;
+}
+
+QMenu::item:selected {
+    background-color: #58a6ff;
+    color: #0d1117;
+}
+
+QMenu::item:disabled {
+    color: #808080;
+}
+
+QMenu::separator {
+    background-color: #30363d;
+    height: 1px;
+    margin: 4px 8px;
+}
+
+QStatusBar {
+    background-color: #1f6feb;
+    color: #ffffff;
+    border-top: none;
+    padding: 4px;
+}
+
+QStatusBar::item {
+    border: none;
+}
+
+QFileDialog {
+    background-color: #0d1117;
+    color: #c9d1d9;
+}
+
+QFileDialog QListView {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+}
+
+QFileDialog QTreeView {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+}
+
+QFileDialog QLineEdit {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    padding: 4px;
+    border-radius: 2px;
+}
+
+QFileDialog QPushButton {
+    background-color: #58a6ff;
+    color: #0d1117;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 2px;
+}
+
+QFileDialog QPushButton:hover {
+    background-color: #161b22;
+}
+
+QFileDialog QPushButton:pressed {
+    background-color: #161b22;
+}
+
+QMessageBox {
+    background-color: #0d1117;
+}
+
+QMessageBox QLabel {
+    color: #c9d1d9;
+}
+
+QMessageBox QPushButton {
+    background-color: #58a6ff;
+    color: #0d1117;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 2px;
+    min-width: 80px;
+}
+
+QMessageBox QPushButton:hover {
+    background-color: #161b22;
+}
+
+QScrollBar:vertical {
+    background-color: #0d1117;
+    width: 16px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #30363d;
+    min-height: 20px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #58a6ff;
+}
+
+QScrollBar::handle:vertical:pressed {
+    background-color: #58a6ff;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar:horizontal {
+    background-color: #0d1117;
+    height: 16px;
+    margin: 0px;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: #30363d;
+    min-width: 20px;
+    margin: 2px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background-color: #58a6ff;
+}
+
+QScrollBar::handle:horizontal:pressed {
+    background-color: #58a6ff;
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+    width: 0px;
+}
