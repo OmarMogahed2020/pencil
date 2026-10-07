@@ -5,10 +5,8 @@ import sys
 
 if __name__ == "__main__":
     userPreferences = loadPreferences()
-    print(userPreferences)
 
     application = QApplication()
-    application.setStyle("Fusion")
-    mainWindow = MainWindow(userPreferences)
+    mainWindow = MainWindow(sys.argv[1] if len(sys.argv) > 1 else None)
     mainWindow.show()
     sys.exit(application.exec())

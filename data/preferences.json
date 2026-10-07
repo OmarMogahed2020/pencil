@@ -1,7 +1,7 @@
 {
-    "theme": "dark-dracula-theme",
-    "font-size": 40,
-    "font-family": "Lucida Console",
-    "text-direction": "rtl",
-    "auto-save": false
+    "auto-save": false,
+    "theme": "dark-theme",
+    "font-size": "13",
+    "font-family": "Arial",
+    "text-direction": "ltr"
 }

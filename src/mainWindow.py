@@ -1,26 +1,74 @@
-from PySide6.QtWebEngineWidgets import QWebEngineView
-from PySide6.QtWidgets import QMessageBox, QFileDialog, QApplication, QDialog, QComboBox, QSpinBox
+from PySide6.QtWidgets import QMessageBox, QFileDialog, QTextEdit, QDialog, QComboBox, QSpinBox, QMessageBox, QStatusBar, QHBoxLayout
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import QFile, QTimer
-from PySide6.QtGui import QAction
+from PySide6.QtCore import QFile, QTimer, QFileSystemWatcher, Qt, QEvent, QObject
+from PySide6.QtGui import QAction, QIcon, QTextOption, QFontMetrics
 from config import *
 import sys
-import json
-from pathlib import Path
+import os
+
+
+class CloseHandler(QObject):
+    def __init__(self, callback):
+        super().__init__()
+        self.callback = callback
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.Type.Close:
+            if self.callback() is False:
+                event.ignore()
+                return True
+        try:
+            return super().eventFilter(obj, event)
+        except RuntimeError:
+            return False
 
 
 class MainWindow:
-    def __init__(self, preferences=None):
+    def __init__(self, openedFilePath=None):
         self.window = self.loadUI()
         self.currentFilePath = None
-        self._pendingPreferences = preferences
-        self.setHtmlContent()
         self.connectActions()
         self.updateWindowTitle()
+
         self.autosaveTimer = QTimer()
         self.autosaveTimer.timeout.connect(self.autoSave)
         self.autosaveTimer.stop()
+
         self.textDirection = "ltr"
+        self.window.setWindowIcon(QIcon(f"{ASSETS[ICON_APP_ICON]}"))
+
+        self.fileWatcher = QFileSystemWatcher()
+        self.fileWatcher.fileChanged.connect(self.refreshFile)
+        self.preferencesWatcher = QFileSystemWatcher()
+        self.preferencesWatcher.fileChanged.connect(lambda: self.applyPreferences(self.getCurrentPreferences()))
+        self.preferencesWatcher.addPath(f"{ASSETS[DATA_PREFERENCES_JSON]}")
+
+        self.savedByApp = False  # used to one time stop the file refreshing method if a change happened by the app itself
+        self.lastSavedText = None  # used to compare the last changes with the editor text
+        self.lastAppliedPreferences = None
+
+        self._closeHandler = CloseHandler(self.askToSaveChanges)  # <-
+        self.window.installEventFilter(self._closeHandler)  # <-
+
+        self.applyPreferences(self.getCurrentPreferences())
+
+        if openedFilePath:
+            self.openFilePath(openedFilePath)
+
+    def refreshFile(self):
+        if self.currentFilePath:
+            try:
+                with open(self.currentFilePath, mode="r", encoding="utf-8") as file:
+                    text = file.read()
+                    textEdit = self.window.findChild(QTextEdit, "textEdit")
+                    if textEdit.toPlainText() != text:
+                        textEdit.setText(text)
+
+                    self.lastSavedText = text  # to prevent the loop completely
+
+            except FileNotFoundError:
+                QMessageBox.critical(self.window, "Error", "Couldn't update the file")
+                sys.exit(1)
 
     def loadUI(self):
         file = QFile(str(ASSETS[UI_MAIN_WINDOW]))
@@ -28,53 +76,50 @@ class MainWindow:
         mainWindow = loader.load(file)
         file.close()
         mainWindow.showMaximized()
+
+        numberLine = mainWindow.findChild(QTextEdit, "numberLine")
+        numberLine.setDisabled(True)
+        numberLine.setReadOnly(True)
+        numberLine.setCursor(Qt.ArrowCursor)
+        numberLine.viewport().setCursor(Qt.ArrowCursor)
+        textEdit = mainWindow.findChild(QTextEdit, "textEdit")
+        textEdit.textChanged.connect(lambda: self.refreshNumberLineNumbers(textEdit))
+        textEdit.verticalScrollBar().valueChanged.connect(lambda: self.refreshNumberLineScroll(textEdit))
+
         if not mainWindow:
-            QMessageBox.critical(title="Error", message="Couldn't open the main window")
+            QMessageBox.critical(self.window, "Error", "Couldn't open the main window")
             sys.exit(1)
         return mainWindow
+
+    def refreshNumberLineNumbers(self, textEdit: QTextEdit):
+        number = 1
+        text = textEdit.toPlainText()
+        for letter in text:
+            if letter == "\n":
+                number += 1
+        format_ = ""
+        for number in range(number):
+            format_ += f"{number+1}\n"
+
+        widget = self.window.findChild(QTextEdit, "numberLine")
+        widget.setText(format_)
+        widget.setFont(textEdit.font())
+        widget.setFontWeight(textEdit.fontWeight())
+        self.refreshNumberLineScroll(textEdit)
+
+        metrics = QFontMetrics(textEdit.font())
+        width = metrics.horizontalAdvance(f" {str(number+1).zfill(4)}")  # to fit the largest number
+        self.window.findChild(QTextEdit, "numberLine").setFixedWidth(width)
+
+    def refreshNumberLineScroll(self, textEdit: QTextEdit):
+        offset = textEdit.verticalScrollBar().value()
+        self.window.findChild(QTextEdit, "numberLine").verticalScrollBar().setValue(offset)
 
     def updateWindowTitle(self):
         if self.currentFilePath:
             self.window.setWindowTitle(f"Pencil | {self.currentFilePath}")
         else:
             self.window.setWindowTitle("Pencil | untitled")
-
-    def setHtmlContent(self):
-        code = None
-        with open(ASSETS[HTML_TEXT_EDITOR], mode="r") as file:
-            code = file.read()
-        widget = self.window.findChild(QWebEngineView, "editorWebEngine")
-
-        if hasattr(self, "_onHtmlLoaded") and self._onHtmlLoaded:
-            try:
-                widget.loadFinished.disconnect(self._onHtmlLoaded)
-            except TypeError:
-                pass
-
-        def onLoaded():
-            widget.loadFinished.disconnect(onLoaded)
-            self.updateDirectionActions()
-            if getattr(self, "_pendingPreferences", None):
-                self.applyPreferences(self._pendingPreferences)
-                self._pendingPreferences = None
-
-        self._onHtmlLoaded = onLoaded
-        widget.loadFinished.connect(onLoaded)
-        widget.setHtml(code)
-
-    def updateDirectionActions(self):
-        widget = self.window.findChild(QWebEngineView, "editorWebEngine")
-        widget.page().runJavaScript(
-            """
-            var ta = document.querySelector('textarea');
-            var dir = 'rtl';
-            if (ta) {
-                dir = ta.getAttribute('dir') || 'rtl';
-            }
-            dir;
-        """,
-            self.applyDirectionState,
-        )
 
     def applyDirectionState(self, direction):
         if direction == "rtl":
@@ -101,124 +146,141 @@ class MainWindow:
         self.window.findChild(QAction, "actionFullScreen").triggered.connect(self.toggleFullScreen)
 
     def newFile(self):
+        self.askToSaveChanges()
         self.currentFilePath = None
+        self.window.findChild(QTextEdit, "textEdit").setText("")
+        self.window.findChild(QStatusBar, "statusbar").showMessage("Created a new empty file", 3000)
         self.updateWindowTitle()
-        self.window.statusBar().showMessage("New file created", 3000)
-        self.setHtmlContent()
 
     def openFile(self):
-        filePath, _ = QFileDialog.getOpenFileName(self.window, "Open File", "", "Text Files (*.txt);;All Files (*)")
+        filePath, _ = QFileDialog.getOpenFileName(self.window, "Open File", "", "All Files (*)")
         if filePath:
-            try:
-                with open(filePath, mode="r", encoding="utf-8") as file:
-                    content = file.read()
+            self.openFilePath(filePath)
 
-                code = None
-                with open(ASSETS[HTML_TEXT_EDITOR], mode="r") as file:
-                    code = file.read()
-                with open(ASSETS[HTML_LTR_HTML if self.textDirection == "ltr" else HTML_RTL_HTML], mode="r") as file:
-                    code = f"{file.read()}\n{code}"
+    def openFilePath(self, filePath):
+        try:
+            with open(filePath, mode="r", encoding="utf-8") as file:
+                self.window.findChild(QTextEdit, "textEdit").setPlainText(file.read())
+            self.currentFilePath = filePath
+            self.updateWindowTitle()
+            self.window.findChild(QStatusBar, "statusbar").showMessage(
+                f"Opened `{self.currentFilePath}`",
+                3000,
+            )
 
-                widget = self.window.findChild(QWebEngineView, "editorWebEngine")
-
-                def onLoadFinished(ok):
-                    widget.loadFinished.disconnect(onLoadFinished)
-                    if ok:
-                        jsCode = "var ta = document.getElementById('editor');"
-                        jsCode += f"ta.value = {json.dumps(content)};"
-                        jsCode += "updateLineNumbers();"
-                        jsCode += "highlightCurrentLine();"
-                        widget.page().runJavaScript(jsCode)
-                    self.updateDirectionActions()
-                    self.window.statusBar().showMessage(f"Opened: {filePath}", 3000)
-
-                widget.loadFinished.connect(onLoadFinished)
-                widget.setHtml(code)
-                self.currentFilePath = filePath
-                self.updateWindowTitle()
-            except Exception as e:
-                QMessageBox.critical(self.window, "Error Opening File", f"Could not open file:\n{filePath}\n\n{e}")
+            self.fileWatcher.addPath(self.currentFilePath)
+        except FileNotFoundError:
+            QMessageBox.critical(self.window, "Error", "Couldn't open the file")
+            sys.exit(1)
 
     def saveFile(self):
         if self.currentFilePath:
             self.saveToPath(self.currentFilePath)
         else:
-            filePath, _ = QFileDialog.getSaveFileName(self.window, "Save File", "", "HTML Files (*.html *.htm);;All Files (*)")
-            if filePath:
-                self.saveToPath(filePath)
+            self.currentFilePath, _ = QFileDialog.getOpenFileName(self.window, "Save as", "", "All Files (*)")
+            self.saveToPath(self.currentFilePath)
 
     def saveToPath(self, filePath):
-        widget = self.window.findChild(QWebEngineView, "editorWebEngine")
-
-        def saveText(text):
-            try:
-                with open(filePath, mode="w", encoding="utf-8") as file:
-                    file.write(text)
-                self.currentFilePath = filePath
+        try:
+            mode = "w" if os.path.exists(f"{filePath}") else "x"
+            with open(f"{self.currentFilePath}", mode=mode, encoding="utf-8") as file:
+                text = self.window.findChild(QTextEdit, "textEdit").toPlainText()
+                file.write(text)
+                self.lastSavedText = text
                 self.updateWindowTitle()
-                self.window.statusBar().showMessage(f"Saved: {filePath}", 3000)
-            except Exception as e:
-                QMessageBox.critical(self.window, "Error Saving File", f"Could not save file:\n{filePath}\n\n{e}")
-
-        widget.page().runJavaScript("document.querySelector('textarea').value", saveText)
-
-    def exitApp(self):
-        self.window.close()
+                self.window.findChild(QStatusBar, "statusbar").showMessage(
+                    f"Saved changes to `{self.currentFilePath}`",
+                    1000,
+                )
+        except:
+            QMessageBox.critical(self.window, "Error", "Couldn't save the file")
+            sys.exit(1)
 
     def undoEdit(self):
-        widget = self.window.findChild(QWebEngineView, "editorWebEngine")
-        widget.page().runJavaScript("var ta = document.querySelector('textarea'); ta.focus(); document.execCommand('undo');")
+        self.window.findChild(QTextEdit, "textEdit").undo()
 
     def redoEdit(self):
-        widget = self.window.findChild(QWebEngineView, "editorWebEngine")
-        widget.page().runJavaScript("var ta = document.querySelector('textarea'); ta.focus(); document.execCommand('redo');")
+        self.window.findChild(QTextEdit, "textEdit").redo()
 
     def cutEdit(self):
-        widget = self.window.findChild(QWebEngineView, "editorWebEngine")
-        widget.page().runJavaScript("var ta = document.querySelector('textarea'); ta.focus(); document.execCommand('cut');")
+        self.window.findChild(QTextEdit, "textEdit").cut()
 
     def copyEdit(self):
-        widget = self.window.findChild(QWebEngineView, "editorWebEngine")
-        widget.page().runJavaScript("var ta = document.querySelector('textarea'); ta.focus(); document.execCommand('copy');")
+        self.window.findChild(QTextEdit, "textEdit").copy()
 
     def pasteEdit(self):
-        widget = self.window.findChild(QWebEngineView, "editorWebEngine")
-        clipboard = QApplication.clipboard()
-        text = clipboard.text()
-        if text:
-            jsCode = f"var ta = document.querySelector('textarea'); ta.value += {json.dumps(text)}; ta.dispatchEvent(new Event('input'));"
-            widget.page().runJavaScript(jsCode)
+        self.window.findChild(QTextEdit, "textEdit").paste()
 
     def setRtl(self):
         self.textDirection = "rtl"
-        widget = self.window.findChild(QWebEngineView, "editorWebEngine")
-        widget.page().runJavaScript("var container = document.getElementById('editor-container'); container.style.direction = 'rtl';")
-        self.window.findChild(QAction, "actionRTL").setEnabled(False)
-        self.window.findChild(QAction, "actionLTR").setEnabled(True)
-        if not getattr(self, "_pendingPreferences", None):
-            savePreferences(self.getCurrentPreferences())
+        editor = self.window.findChild(QTextEdit, "textEdit")
+        editor.setLayoutDirection(Qt.RightToLeft)
+        opt = QTextOption()
+        opt.setTextDirection(Qt.RightToLeft)
+        opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
+        editor.document().setDefaultTextOption(opt)
+
+        numberLine = self.window.findChild(QTextEdit, "numberLine")
+        numberLine.setLayoutDirection(Qt.LeftToRight)
+        opt = QTextOption()
+        opt.setTextDirection(Qt.LeftToRight)
+        opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
+        numberLine.document().setDefaultTextOption(opt)
+
+        self.applyDirectionState("rtl")
+        self.window.findChild(QHBoxLayout, "textLayout").setDirection(QHBoxLayout.RightToLeft)
+        self.saveDirectionToPreferences()
 
     def setLtr(self):
         self.textDirection = "ltr"
-        widget = self.window.findChild(QWebEngineView, "editorWebEngine")
-        widget.page().runJavaScript("var container = document.getElementById('editor-container'); container.style.direction = 'ltr';")
-        self.window.findChild(QAction, "actionLTR").setEnabled(False)
-        self.window.findChild(QAction, "actionRTL").setEnabled(True)
-        if not getattr(self, "_pendingPreferences", None):
-            savePreferences(self.getCurrentPreferences())
+        editor = self.window.findChild(QTextEdit, "textEdit")
+        editor.setLayoutDirection(Qt.LeftToRight)
+        opt = QTextOption()
+        opt.setTextDirection(Qt.LeftToRight)
+        opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
+        editor.document().setDefaultTextOption(opt)
+
+        numberLine = self.window.findChild(QTextEdit, "numberLine")
+        numberLine.setLayoutDirection(Qt.RightToLeft)
+        opt = QTextOption()
+        opt.setTextDirection(Qt.RightToLeft)
+        opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
+        numberLine.document().setDefaultTextOption(opt)
+
+        self.applyDirectionState("ltr")
+        self.window.findChild(QHBoxLayout, "textLayout").setDirection(QHBoxLayout.LeftToRight)
+        self.saveDirectionToPreferences()
+
+    def saveDirectionToPreferences(self):  # because it is not edited by the dialog directly
+        try:
+            old = ""
+            with open(ASSETS[DATA_PREFERENCES_JSON], mode="r", encoding="utf-8") as file:
+                old = json.loads(file.read())
+            old["text-direction"] = self.textDirection
+            with open(ASSETS[DATA_PREFERENCES_JSON], mode="w", encoding="utf-8") as file:
+                file.write(json.dumps(old, indent=4))
+        except FileNotFoundError:
+            QMessageBox.critical(self.window, "Pencil", "Preferences doesn't exist")
+            sys.exit(1)
+        except json.decoder.JSONDecodeError:
+            self.saveDirectionToPreferences()
 
     def toggleAutoSave(self, checked):
         if checked:
-            self.autosaveTimer.start(50)
+            self.autosaveTimer.start(200)
             self.window.statusBar().showMessage("Auto Save enabled", 3000)
         else:
             self.autosaveTimer.stop()
             self.window.statusBar().showMessage("Auto Save disabled", 3000)
-        savePreferences(self.getCurrentPreferences())
+        preferences = self.getCurrentPreferences()
+        preferences["auto-save"] = checked
+        savePreferences(preferences)
 
     def autoSave(self):
         if self.currentFilePath:
-            self.saveFile()
+            text = self.window.findChild(QTextEdit, "textEdit").toPlainText()
+            if text != self.lastSavedText:
+                self.saveToPath(self.currentFilePath)
 
     def setColorTheme(self, themeKey):
         self._currentTheme = themeKey
@@ -233,14 +295,15 @@ class MainWindow:
         file = QFile(str(ASSETS[UI_PREFERENCES]))
         loader = QUiLoader()
         dialog = loader.load(file)
+        dialog.setStyleSheet(self.window.styleSheet())
         file.close()
         if dialog:
             self.initPreferencesDialog(dialog)
             result = dialog.exec()
             if result == QDialog.Accepted:
                 preferences = self.readPreferencesFromDialog(dialog)
+                savePreferences(preferences)  # should be first to save preferences before updating the editor
                 self.applyPreferences(preferences)
-                savePreferences(preferences)
         else:
             QMessageBox.critical(self.window, "Error", "Couldn't open the preferences window")
 
@@ -295,6 +358,11 @@ class MainWindow:
                 fontCombo.setCurrentIndex(index)
 
     def applyPreferences(self, preferences):
+
+        if self.lastAppliedPreferences == preferences:
+            return
+        self.lastAppliedPreferences = preferences
+
         theme = preferences.get("theme", "dark-theme")
         theme_map = {
             "dark-theme": STYLE_DARK_THEME,
@@ -310,39 +378,33 @@ class MainWindow:
             "dark-github-theme": STYLE_DARK_GITHUB,
             "light-github-theme": STYLE_LIGHT_GITHUB,
         }
-        theme_key = theme_map.get(theme, STYLE_DARK_THEME)
-        self.setColorTheme(theme_key)
+        self.setColorTheme(theme_map.get(theme, STYLE_DARK_THEME))
 
         direction = preferences.get("text-direction", "ltr")
-        autoSave = preferences.get("auto-save", False)
+        if direction == "rtl":
+            self.setRtl()
+        else:
+            self.setLtr()
 
+        autoSave = preferences.get("auto-save", False)
         action = self.window.findChild(QAction, "actionAutoSave")
         if action:
             action.setChecked(autoSave)
 
-        self._pendingPreferences = preferences
+        self.applyFontSize(int(preferences.get("font-size", 13)))
+        self.applyFontFamily(preferences.get("font-family", "Arial"))
 
-        widget = self.window.findChild(QWebEngineView, "editorWebEngine")
-        if widget:
-            if direction == "rtl":
-                self.setRtl()
-            else:
-                self.setLtr()
+        textEdit = self.window.findChild(QTextEdit, "textEdit")
+        metrics = QFontMetrics(textEdit.font())
+        width = metrics.horizontalAdvance(" ")
+        textEdit.setTabStopDistance(width * 4)
 
-            if hasattr(widget, "page"):
-                self._applyPendingPreferences()
+        self.refreshNumberLineNumbers(textEdit)
+        self.refreshNumberLineScroll(textEdit)
 
-    def _applyPendingPreferences(self):
-        preferences = getattr(self, "_pendingPreferences", None)
-        if not preferences:
-            return
-        
-        self._pendingPreferences = None
-        fontSize = int(preferences.get("font-size", 13))
-        self.applyFontSize(fontSize)
-        fontFamily = preferences.get("font-family", "Arial")
-        self.applyFontFamily(fontFamily)
-        savePreferences(self.getCurrentPreferences())
+        updatedPreferences = f"{json.dumps(preferences, indent=4)}"
+        with open(ASSETS[DATA_PREFERENCES_JSON], mode="w", encoding="utf-8") as file:
+            file.write(updatedPreferences)
 
     def readPreferencesFromDialog(self, dialog):
         preferences = {}
@@ -385,38 +447,44 @@ class MainWindow:
 
     def applyFontSize(self, size):
         self._currentFontSize = size
-        widget = self.window.findChild(QWebEngineView, "editorWebEngine")
-        jsCode = f"var editor = document.getElementById('editor'); if (editor) editor.style.fontSize = '{size}px'; var ln = document.getElementById('lineNumbers'); if (ln) ln.style.fontSize = '{size}px';"
-        widget.page().runJavaScript(jsCode)
+        editor = self.window.findChild(QTextEdit, "textEdit")
+        font = editor.font()
+        font.setPointSize(size)
+        editor.setFont(font)
 
     def applyFontFamily(self, family):
         self._currentFontFamily = family
-        widget = self.window.findChild(QWebEngineView, "editorWebEngine")
-        jsCode = f"var editor = document.getElementById('editor'); if (editor) editor.style.fontFamily = '{family}'; var ln = document.getElementById('lineNumbers'); if (ln) ln.style.fontFamily = '{family}';"
-        widget.page().runJavaScript(jsCode)
+        editor = self.window.findChild(QTextEdit, "textEdit")
+        font = editor.font()
+        font.setFamily(family)
+        editor.setFont(font)
 
     def getCurrentPreferences(self):
         preferences = {}
-        theme_slug_map = {
-            STYLE_DARK_THEME: "dark-theme",
-            STYLE_LIGHT_THEME: "light-theme",
-            STYLE_DARK_MONOKAI: "dark-monokai-theme",
-            STYLE_LIGHT_MONOKAI: "light-monokai-theme",
-            STYLE_DARK_DRACULA: "dark-dracula-theme",
-            STYLE_LIGHT_DRACULA: "light-dracula-theme",
-            STYLE_DARK_NORD: "dark-nord-theme",
-            STYLE_LIGHT_NORD: "light-nord-theme",
-            STYLE_DARK_SOLARIZED: "dark-solarized-theme",
-            STYLE_LIGHT_SOLARIZED: "light-solarized-theme",
-            STYLE_DARK_GITHUB: "dark-github-theme",
-            STYLE_LIGHT_GITHUB: "light-github-theme",
-        }
-        preferences["theme"] = theme_slug_map.get(getattr(self, "_currentTheme", STYLE_DARK_THEME), "dark-theme")
-        preferences["font-size"] = getattr(self, "_currentFontSize", 13)
-        preferences["font-family"] = getattr(self, "_currentFontFamily", "Arial")
-        preferences["text-direction"] = self.textDirection
-        action = self.window.findChild(QAction, "actionAutoSave")
-        preferences["auto-save"] = action.isChecked() if action else False
+        try:
+            with open(ASSETS[DATA_PREFERENCES_JSON], mode="r", encoding="utf-8") as file:
+                preferences = json.loads(file.read())
+        except FileNotFoundError:
+            theme_slug_map = {
+                STYLE_DARK_THEME: "dark-theme",
+                STYLE_LIGHT_THEME: "light-theme",
+                STYLE_DARK_MONOKAI: "dark-monokai-theme",
+                STYLE_LIGHT_MONOKAI: "light-monokai-theme",
+                STYLE_DARK_DRACULA: "dark-dracula-theme",
+                STYLE_LIGHT_DRACULA: "light-dracula-theme",
+                STYLE_DARK_NORD: "dark-nord-theme",
+                STYLE_LIGHT_NORD: "light-nord-theme",
+                STYLE_DARK_SOLARIZED: "dark-solarized-theme",
+                STYLE_LIGHT_SOLARIZED: "light-solarized-theme",
+                STYLE_DARK_GITHUB: "dark-github-theme",
+                STYLE_LIGHT_GITHUB: "light-github-theme",
+            }
+            preferences["theme"] = theme_slug_map.get(getattr(self, "_currentTheme", STYLE_DARK_THEME), "dark-theme")
+            preferences["font-size"] = getattr(self, "_currentFontSize", 13)
+            preferences["font-family"] = getattr(self, "_currentFontFamily", "Arial")
+            preferences["text-direction"] = self.textDirection
+            action = self.window.findChild(QAction, "actionAutoSave")
+            preferences["auto-save"] = action.isChecked() if action and preferences["auto-save"] else False
         return preferences
 
     def toggleFullScreen(self):
@@ -425,5 +493,41 @@ class MainWindow:
         else:
             self.window.showFullScreen()
 
+    def theFileDiffer(self, filePath):
+        currentText = self.window.findChild(QTextEdit, "textEdit").toPlainText()
+        try:
+            with open(filePath, mode="r", encoding="utf-8") as file:
+                if file.read() == currentText:
+                    return False
+                else:
+                    return True
+        except FileNotFoundError:
+            return False  # it will "SaveAs" the file
+
+    def askToSaveChanges(self):
+        if self.getCurrentPreferences()["auto-save"] == True:
+            self.saveFile()  # to make sure that the file is saved
+            return
+        elif type(self.currentFilePath) is str and not self.theFileDiffer(self.currentFilePath):
+            return
+
+        result = QMessageBox.question(
+            self.window,
+            "Pencil",
+            "Do you want to save the file?",
+            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+            QMessageBox.Yes,
+        )
+
+        if result == QMessageBox.Yes:
+            self.saveFile()
+            return True
+        elif result == QMessageBox.No:
+            return True
+        return False
+
     def show(self):
         self.window.show()
+
+    def exitApp(self):
+        self.window.close()

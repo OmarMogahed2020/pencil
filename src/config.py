@@ -4,12 +4,10 @@ import os
 
 baseDir = Path(__file__).resolve().parent.parent
 
-UI_MAIN_WINDOW = "ui main window"
-UI_PREFERENCES = "ui preferences"
+ICON_APP_ICON = "APP ICON"
 
-HTML_TEXT_EDITOR = "html text editor"
-HTML_RTL_HTML = "html rtl html"
-HTML_LTR_HTML = "html ltr html"
+UI_MAIN_WINDOW = "UI MAIN WINDOW"
+UI_PREFERENCES = "UI PREFERENCES"
 
 STYLE_DARK_THEME = "STYLE DARK THEME"
 STYLE_LIGHT_THEME = "STYLE LIGHT THEME"
@@ -37,9 +35,6 @@ DEFAULT_PREFERENCES = """{
 ASSETS = {
     UI_MAIN_WINDOW: baseDir / "ui" / "mainWindow.ui",
     UI_PREFERENCES: baseDir / "ui" / "preferencesWindow.ui",
-    HTML_TEXT_EDITOR: baseDir / "assets" / "html" / "textEditor.html",
-    HTML_RTL_HTML: baseDir / "assets" / "html" / "rtlHtml.html",
-    HTML_LTR_HTML: baseDir / "assets" / "html" / "ltrHtml.html",
     STYLE_DARK_THEME: baseDir / "assets" / "styles" / "dark-theme.qss",
     STYLE_LIGHT_THEME: baseDir / "assets" / "styles" / "light-theme.qss",
     STYLE_DARK_MONOKAI: baseDir / "assets" / "styles" / "dark-monokai-theme.qss",
@@ -53,19 +48,21 @@ ASSETS = {
     STYLE_LIGHT_SOLARIZED: baseDir / "assets" / "styles" / "light-solarized-theme.qss",
     STYLE_LIGHT_GITHUB: baseDir / "assets" / "styles" / "light-github-theme.qss",
     DATA_PREFERENCES_JSON: baseDir / "data" / "preferences.json",
+    ICON_APP_ICON: baseDir / "assets" / "icons" / "pencilIcon.png",
 }
+
 
 def loadPreferences():
     path = ASSETS[DATA_PREFERENCES_JSON]
 
     if os.path.exists(path) and os.path.getsize(path) > 0:
-        with open(path, mode="r") as file:
-            return json.load(file)
+        try:
+            with open(path, mode="r") as file:
+                return json.load(file)
+        except json.JSONDecodeError:
+            pass
 
-    # if the file is empty or not found
-    writeMode = "r" if os.path.exists(path) and os.path.getsize(path) else "w" if os.path.exists(path) else "x"
-
-    with open(path, mode=writeMode) as file:
+    with open(path, mode="w") as file:
         file.write(DEFAULT_PREFERENCES)
     with open(path, mode="r") as file:
         return json.load(file)

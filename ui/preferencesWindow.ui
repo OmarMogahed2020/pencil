@@ -146,22 +146,37 @@
         <widget class="QComboBox" name="fontComboBox">
          <item>
           <property name="text">
-           <string>Arial</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
            <string>Courier New</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>Georgia</string>
+           <string>DejaVu Sans Mono</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>Impact</string>
+           <string>Fira Code</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Hack</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Inconsolata</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>JetBrains Mono</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Liberation Mono</string>
           </property>
          </item>
          <item>
@@ -176,27 +191,17 @@
          </item>
          <item>
           <property name="text">
-           <string>Segoe UI</string>
+           <string>Noto Sans Mono</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>Tahoma</string>
+           <string>Source Code Pro</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>Times New Roman</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Trebuchet MS</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Verdana</string>
+           <string>Ubuntu Mono</string>
           </property>
          </item>
         </widget>
