@@ -146,6 +146,16 @@
         <widget class="QComboBox" name="fontComboBox">
          <item>
           <property name="text">
+           <string>Andale Mono</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Bitstream Vera Sans Mono</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
            <string>Courier New</string>
           </property>
          </item>
@@ -156,17 +166,42 @@
          </item>
          <item>
           <property name="text">
-           <string>Fira Code</string>
+           <string>Droid Sans Mono</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>Hack</string>
+           <string>Everson Mono</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Fira Mono</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>FreeMono</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>IBM Plex Mono</string>
           </property>
          </item>
          <item>
           <property name="text">
            <string>Inconsolata</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Intel One Mono</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Iosevka</string>
           </property>
          </item>
          <item>
@@ -181,12 +216,12 @@
          </item>
          <item>
           <property name="text">
-           <string>Lucida Console</string>
+           <string>Menlo</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>Monospace</string>
+           <string>Monaco</string>
           </property>
          </item>
          <item>
@@ -196,12 +231,42 @@
          </item>
          <item>
           <property name="text">
+           <string>Overpass Mono</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>PT Mono</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Roboto Mono</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Sergamon</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
            <string>Source Code Pro</string>
           </property>
          </item>
          <item>
           <property name="text">
+           <string>Space Mono</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
            <string>Ubuntu Mono</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Victor Mono</string>
           </property>
          </item>
         </widget>

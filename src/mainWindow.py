@@ -22,6 +22,17 @@ class CloseHandler(QObject):
         except RuntimeError:
             return False
 
+class TabHandler(QObject):
+    def __init__(self, editor):
+        super().__init__()
+        self.editor = editor
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.Type.KeyPress:
+            if event.key() == Qt.Key.Key_Tab and obj is self.editor:
+                obj.insertPlainText("    ")
+                return True
+        return False
 
 class MainWindow:
     def __init__(self, openedFilePath=None):
@@ -54,6 +65,9 @@ class MainWindow:
 
         if openedFilePath:
             self.openFilePath(openedFilePath)
+
+        self._tabHandler = TabHandler(self.window.findChild(QTextEdit, "textEdit"))
+        self.window.findChild(QTextEdit, "textEdit").installEventFilter(self._tabHandler)
 
     def refreshFile(self):
         if self.currentFilePath:
