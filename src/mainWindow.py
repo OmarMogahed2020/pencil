@@ -22,6 +22,7 @@ class CloseHandler(QObject):
         except RuntimeError:
             return False
 
+
 class TabHandler(QObject):
     def __init__(self, editor):
         super().__init__()
@@ -33,6 +34,7 @@ class TabHandler(QObject):
                 obj.insertPlainText("    ")
                 return True
         return False
+
 
 class MainWindow:
     def __init__(self, openedFilePath=None):
@@ -228,11 +230,17 @@ class MainWindow:
     def setRtl(self):
         self.textDirection = "rtl"
         editor = self.window.findChild(QTextEdit, "textEdit")
+
+        oldText = editor.toPlainText()
+
         editor.setLayoutDirection(Qt.RightToLeft)
         opt = QTextOption()
         opt.setTextDirection(Qt.RightToLeft)
         opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
         editor.document().setDefaultTextOption(opt)
+        editor.setHtml('<div dir="rtl"></div>')
+
+        editor.setText(oldText)
 
         numberLine = self.window.findChild(QTextEdit, "numberLine")
         numberLine.setLayoutDirection(Qt.LeftToRight)
@@ -248,11 +256,17 @@ class MainWindow:
     def setLtr(self):
         self.textDirection = "ltr"
         editor = self.window.findChild(QTextEdit, "textEdit")
+
+        oldText = editor.toPlainText()
+
         editor.setLayoutDirection(Qt.LeftToRight)
         opt = QTextOption()
         opt.setTextDirection(Qt.LeftToRight)
         opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
         editor.document().setDefaultTextOption(opt)
+        editor.setHtml('<div dir="ltr"></div>')
+
+        editor.setText(oldText)
 
         numberLine = self.window.findChild(QTextEdit, "numberLine")
         numberLine.setLayoutDirection(Qt.RightToLeft)
