@@ -2,6 +2,8 @@
 
 A lightweight, cross-platform text editor built with Python and PySide6.
 
+<img width="1918" height="975" alt="img1" src="https://github.com/user-attachments/assets/22052181-53e0-4456-bd89-2780f4ff046a" />
+
 ## Overview
 
 Pencil is a minimal text editor designed for simplicity and speed. It provides
@@ -20,6 +22,7 @@ for quick note-taking, light scripting, and everyday text editing tasks.
 - **Font customization** — Configurable font family and size
 - **Unsaved changes protection** — Prompts to save before closing
 - **Persistent preferences** — Settings stored across sessions
+- **Many themes** — User can choose any theme and alter the QSS code too
 
 ## Requirements
 
@@ -35,3 +38,10 @@ cd pencil
 python3 -m venv .venv
 source .venv/bin/activate   # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+```
+
+## Images
+
+<img width="1918" height="975" alt="img4" src="https://github.com/user-attachments/assets/b4ba640e-2b1a-45ed-8b6a-2f0195353c66" />
+<img width="1918" height="975" alt="img2" src="https://github.com/user-attachments/assets/731988a8-4825-4be9-a670-5e50fa26cb76" />
+<img width="1918" height="975" alt="img3" src="https://github.com/user-attachments/assets/0cf71bb3-031f-4da3-99f9-c25a6e1a5781" />
