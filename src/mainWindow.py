@@ -1,7 +1,17 @@
-from PySide6.QtWidgets import QMessageBox, QFileDialog, QTextEdit, QDialog, QComboBox, QSpinBox, QMessageBox, QStatusBar, QHBoxLayout
+from PySide6.QtWidgets import (
+    QMessageBox,
+    QFileDialog,
+    QTextEdit,
+    QDialog,
+    QComboBox,
+    QSpinBox,
+    QMessageBox,
+    QStatusBar,
+    QHBoxLayout,
+)
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QTimer, QFileSystemWatcher, Qt, QEvent, QObject
-from PySide6.QtGui import QAction, QIcon, QTextOption, QFontMetrics
+from PySide6.QtGui import QAction, QIcon, QTextOption, QFontMetrics, QKeySequence
 from config import *
 import sys
 import os
@@ -23,16 +33,52 @@ class CloseHandler(QObject):
             return False
 
 
-class TabHandler(QObject):
+class CharHandler(QObject):
     def __init__(self, editor):
         super().__init__()
         self.editor = editor
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.KeyPress:
-            if event.key() == Qt.Key.Key_Tab and obj is self.editor:
-                obj.insertPlainText("    ")
-                return True
+            key = event.text() if event.type() == QEvent.Type.KeyPress else None
+            pairs = {"'": "'", '"': '"', "`": "`", "(": ")", "[": "]", "{": "}"}
+            if obj is self.editor:
+                if event.key() == Qt.Key.Key_Tab:
+                    obj.insertPlainText("    ")
+                    return True
+                elif event.key() in [Qt.Key.Key_Return, Qt.Key.Key_Enter]:
+                    lastIndentation = ""
+                    cursorPosition = self.editor.textCursor().position()
+                    text = self.editor.toPlainText()
+                    index = cursorPosition - 1
+                    while index > -1:
+                        if text[index] in "\n\r":
+                            break
+                        if text[index] not in " \t":
+                            lastIndentation = ""
+                        else:
+                            lastIndentation += text[index]
+                        index -= 1
+                    if cursorPosition > 0 and text[cursorPosition - 1] in "{[(":
+                        obj.insertPlainText("\n" + lastIndentation + "    \n"+ lastIndentation)
+                        # go back
+                        timesBackward = len(lastIndentation)
+                        cursor = self.editor.textCursor()
+                        while timesBackward+1:
+                            cursor.movePosition(cursor.MoveOperation.Left)
+                            timesBackward-=1
+                        self.editor.setTextCursor(cursor)
+                    else:
+                        obj.insertPlainText("\n" + lastIndentation)
+                    return True
+
+                elif key in pairs:
+                    obj.insertPlainText(key + pairs[key])
+                    # go back
+                    cursor = self.editor.textCursor()
+                    cursor.movePosition(cursor.MoveOperation.Left)
+                    self.editor.setTextCursor(cursor)
+                    return True
         return False
 
 
@@ -68,8 +114,8 @@ class MainWindow:
         if openedFilePath:
             self.openFilePath(openedFilePath)
 
-        self._tabHandler = TabHandler(self.window.findChild(QTextEdit, "textEdit"))
-        self.window.findChild(QTextEdit, "textEdit").installEventFilter(self._tabHandler)
+        self._charHandler = CharHandler(self.window.findChild(QTextEdit, "textEdit"))
+        self.window.findChild(QTextEdit, "textEdit").installEventFilter(self._charHandler)
 
     def refreshFile(self):
         if self.currentFilePath:
@@ -101,6 +147,7 @@ class MainWindow:
         textEdit = mainWindow.findChild(QTextEdit, "textEdit")
         textEdit.textChanged.connect(lambda: self.refreshNumberLineNumbers(textEdit))
         textEdit.verticalScrollBar().valueChanged.connect(lambda: self.refreshNumberLineScroll(textEdit))
+        textEdit.setAcceptRichText(False)
 
         if not mainWindow:
             QMessageBox.critical(self.window, "Error", "Couldn't open the main window")
