@@ -29,7 +29,10 @@ DEFAULT_PREFERENCES = """{
     "theme": "dark-theme",
     "font-size": "13",
     "font-family": "Arial",
-    "text-direction": "ltr"
+    "text-direction": "ltr",
+    "replaceTabWithSpaces": true,
+    "spacesPerTab": 4,
+    "showWhiteSpaces": true
 }"""
 
 ASSETS = {

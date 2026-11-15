@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QStatusBar,
     QHBoxLayout,
+    QCheckBox,
 )
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QTimer, QFileSystemWatcher, Qt, QEvent, QObject
@@ -280,10 +281,13 @@ class MainWindow:
 
         oldText = editor.toPlainText()
 
+        preferences = self.getCurrentPreferences()
+
         editor.setLayoutDirection(Qt.RightToLeft)
         opt = QTextOption()
         opt.setTextDirection(Qt.RightToLeft)
-        opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
+        if preferences["showWhiteSpaces"] is True:
+            opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
         editor.document().setDefaultTextOption(opt)
         editor.setHtml('<div dir="rtl"></div>')
 
@@ -293,7 +297,8 @@ class MainWindow:
         numberLine.setLayoutDirection(Qt.LeftToRight)
         opt = QTextOption()
         opt.setTextDirection(Qt.LeftToRight)
-        opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
+        if preferences["showWhiteSpaces"] is True:
+            opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
         numberLine.document().setDefaultTextOption(opt)
 
         self.applyDirectionState("rtl")
@@ -306,10 +311,13 @@ class MainWindow:
 
         oldText = editor.toPlainText()
 
+        preferences = self.getCurrentPreferences()
+
         editor.setLayoutDirection(Qt.LeftToRight)
         opt = QTextOption()
         opt.setTextDirection(Qt.LeftToRight)
-        opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
+        if preferences["showWhiteSpaces"] is True:
+            opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
         editor.document().setDefaultTextOption(opt)
         editor.setHtml('<div dir="ltr"></div>')
 
@@ -319,7 +327,8 @@ class MainWindow:
         numberLine.setLayoutDirection(Qt.RightToLeft)
         opt = QTextOption()
         opt.setTextDirection(Qt.RightToLeft)
-        opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
+        if preferences["showWhiteSpaces"] is True:
+            opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
         numberLine.document().setDefaultTextOption(opt)
 
         self.applyDirectionState("ltr")
@@ -386,6 +395,7 @@ class MainWindow:
         themeCombo = dialog.findChild(QComboBox, "comboBox")
         spinBox = dialog.findChild(QSpinBox, "spinBox")
         fontCombo = dialog.findChild(QComboBox, "fontComboBox")
+        showWhiteSpacesCheck = dialog.findChild(QCheckBox,"whiteSpacesCheck")
 
         theme_map = {
             "dark-theme": 0,
@@ -431,6 +441,9 @@ class MainWindow:
             index = fontCombo.findText(fontFamily)
             if index >= 0:
                 fontCombo.setCurrentIndex(index)
+
+        if self.getCurrentPreferences()["showWhiteSpaces"] is True:
+            showWhiteSpacesCheck.setChecked(True)
 
     def applyPreferences(self, preferences):
 
@@ -486,6 +499,7 @@ class MainWindow:
         themeCombo = dialog.findChild(QComboBox, "comboBox")
         spinBox = dialog.findChild(QSpinBox, "spinBox")
         fontCombo = dialog.findChild(QComboBox, "fontComboBox")
+        showWhiteSpacesCheck = dialog.findChild(QCheckBox,"whiteSpacesCheck")
         autoSaveAction = self.window.findChild(QAction, "actionAutoSave")
 
         theme_map = {
@@ -517,6 +531,7 @@ class MainWindow:
             preferences["auto-save"] = autoSaveAction.isChecked()
 
         preferences["text-direction"] = self.textDirection
+        preferences["showWhiteSpaces"] = showWhiteSpacesCheck.isChecked()
 
         return preferences
 
