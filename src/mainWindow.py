@@ -38,6 +38,7 @@ class CharHandler(QObject):
     def __init__(self, editor):
         super().__init__()
         self.editor = editor
+        self.tabReplacement = "\t"  # replaced by spaces by preferences on need
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.KeyPress:
@@ -45,7 +46,7 @@ class CharHandler(QObject):
             pairs = {"'": "'", '"': '"', "`": "`", "(": ")", "[": "]", "{": "}"}
             if obj is self.editor:
                 if event.key() == Qt.Key.Key_Tab:
-                    obj.insertPlainText("    ")
+                    obj.insertPlainText(self.tabReplacement)  # may be tab or spaces
                     return True
                 elif event.key() in [Qt.Key.Key_Return, Qt.Key.Key_Enter]:
                     lastIndentation = ""
@@ -61,13 +62,13 @@ class CharHandler(QObject):
                             lastIndentation += text[index]
                         index -= 1
                     if cursorPosition > 0 and text[cursorPosition - 1] in "{[(":
-                        obj.insertPlainText("\n" + lastIndentation + "    \n"+ lastIndentation)
+                        obj.insertPlainText("\n" + lastIndentation + self.tabReplacement + "\n" + lastIndentation)
                         # go back
                         timesBackward = len(lastIndentation)
                         cursor = self.editor.textCursor()
-                        while timesBackward+1:
+                        while timesBackward + 1:
                             cursor.movePosition(cursor.MoveOperation.Left)
-                            timesBackward-=1
+                            timesBackward -= 1
                         self.editor.setTextCursor(cursor)
                     else:
                         obj.insertPlainText("\n" + lastIndentation)
@@ -110,22 +111,27 @@ class MainWindow:
         self._closeHandler = CloseHandler(self.askToSaveChanges)  # <-
         self.window.installEventFilter(self._closeHandler)  # <-
 
-        self.applyPreferences(self.getCurrentPreferences())
-
         if openedFilePath:
             self.openFilePath(openedFilePath)
 
         self._charHandler = CharHandler(self.window.findChild(QTextEdit, "textEdit"))
         self.window.findChild(QTextEdit, "textEdit").installEventFilter(self._charHandler)
 
+        self.applyPreferences(self.getCurrentPreferences())
+
     def refreshFile(self):
+        textEdit = self.window.findChild(QTextEdit, "textEdit")
+        lastCursorPosition = textEdit.textCursor().position()
         if self.currentFilePath:
             try:
                 with open(self.currentFilePath, mode="r", encoding="utf-8") as file:
                     text = file.read()
-                    textEdit = self.window.findChild(QTextEdit, "textEdit")
                     if textEdit.toPlainText() != text:
-                        textEdit.setText(text)
+                        textEdit.setPlainText(text)
+                        newPos = min(lastCursorPosition, len(text))
+                        newCursor = textEdit.textCursor()
+                        newCursor.setPosition(newPos)
+                        textEdit.setTextCursor(newCursor)
 
                     self.lastSavedText = text  # to prevent the loop completely
 
@@ -235,13 +241,12 @@ class MainWindow:
             self.fileWatcher.addPath(self.currentFilePath)
         except FileNotFoundError:
             QMessageBox.critical(self.window, "Error", "Couldn't open the file")
-            sys.exit(1)
 
     def saveFile(self):
         if self.currentFilePath:
             self.saveToPath(self.currentFilePath)
         else:
-            self.currentFilePath, _ = QFileDialog.getOpenFileName(self.window, "Save as", "", "All Files (*)")
+            self.currentFilePath, _ = QFileDialog.getSaveFileName(self.window, "Save as", "", "All Files (*)")
             self.saveToPath(self.currentFilePath)
 
     def saveToPath(self, filePath):
@@ -258,7 +263,6 @@ class MainWindow:
                 )
         except:
             QMessageBox.critical(self.window, "Error", "Couldn't save the file")
-            sys.exit(1)
 
     def undoEdit(self):
         self.window.findChild(QTextEdit, "textEdit").undo()
@@ -395,7 +399,19 @@ class MainWindow:
         themeCombo = dialog.findChild(QComboBox, "comboBox")
         spinBox = dialog.findChild(QSpinBox, "spinBox")
         fontCombo = dialog.findChild(QComboBox, "fontComboBox")
-        showWhiteSpacesCheck = dialog.findChild(QCheckBox,"whiteSpacesCheck")
+        showWhiteSpacesCheck = dialog.findChild(QCheckBox, "whiteSpacesCheck")
+        replaceTabWithSpacesCheck = dialog.findChild(QCheckBox, "replaceTabWithSpacesCheck")
+
+        if self.getCurrentPreferences()["replaceTabWithSpaces"] is True:
+            replaceTabWithSpacesCheck.setChecked(True)
+
+        def enableOrDisable():
+            replaceTabWithSpacesCheck = dialog.findChild(QCheckBox, "replaceTabWithSpacesCheck")
+            numberOfSpacesOfTabSpin = dialog.findChild(QSpinBox, "numberOfSpacesOfTabSpin")
+            numberOfSpacesOfTabSpin.setEnabled(replaceTabWithSpacesCheck.isChecked())
+
+        enableOrDisable()  # should be called once at least
+        replaceTabWithSpacesCheck.clicked.connect(enableOrDisable)
 
         theme_map = {
             "dark-theme": 0,
@@ -451,6 +467,9 @@ class MainWindow:
             return
         self.lastAppliedPreferences = preferences
 
+        textEdit = self.window.findChild(QTextEdit, "textEdit")
+        lastCursorPosition = textEdit.textCursor().position()  # used to save the cursor position after UI update
+
         theme = preferences.get("theme", "dark-theme")
         theme_map = {
             "dark-theme": STYLE_DARK_THEME,
@@ -481,14 +500,20 @@ class MainWindow:
 
         self.applyFontSize(int(preferences.get("font-size", 13)))
         self.applyFontFamily(preferences.get("font-family", "Arial"))
+        if hasattr(self, "_charHandler"):
+            self._charHandler.tabReplacement = " " * preferences["spacesPerTab"] if preferences["replaceTabWithSpaces"] else "\t"
 
-        textEdit = self.window.findChild(QTextEdit, "textEdit")
         metrics = QFontMetrics(textEdit.font())
         width = metrics.horizontalAdvance(" ")
         textEdit.setTabStopDistance(width * 4)
 
         self.refreshNumberLineNumbers(textEdit)
         self.refreshNumberLineScroll(textEdit)
+
+        # return cursor to it's position
+        cursor = textEdit.textCursor()
+        cursor.setPosition(lastCursorPosition)
+        textEdit.setTextCursor(cursor)
 
         updatedPreferences = f"{json.dumps(preferences, indent=4)}"
         with open(ASSETS[DATA_PREFERENCES_JSON], mode="w", encoding="utf-8") as file:
@@ -499,7 +524,9 @@ class MainWindow:
         themeCombo = dialog.findChild(QComboBox, "comboBox")
         spinBox = dialog.findChild(QSpinBox, "spinBox")
         fontCombo = dialog.findChild(QComboBox, "fontComboBox")
-        showWhiteSpacesCheck = dialog.findChild(QCheckBox,"whiteSpacesCheck")
+        showWhiteSpacesCheck = dialog.findChild(QCheckBox, "whiteSpacesCheck")
+        replaceTabWithSpacesCheck = dialog.findChild(QCheckBox, "replaceTabWithSpacesCheck")
+        numberOfSpacesOfTabSpinCheck = dialog.findChild(QSpinBox, "numberOfSpacesOfTabSpin")
         autoSaveAction = self.window.findChild(QAction, "actionAutoSave")
 
         theme_map = {
@@ -532,6 +559,8 @@ class MainWindow:
 
         preferences["text-direction"] = self.textDirection
         preferences["showWhiteSpaces"] = showWhiteSpacesCheck.isChecked()
+        preferences["replaceTabWithSpaces"] = replaceTabWithSpacesCheck.isChecked()
+        preferences["spacesPerTab"] = numberOfSpacesOfTabSpinCheck.value()
 
         return preferences
 
