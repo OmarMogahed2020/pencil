@@ -1,10 +1,10 @@
 {
+    "auto-save": false,
     "theme": "dark-theme",
-    "font-size": 20,
-    "font-family": "Bitstream Vera Sans Mono",
-    "auto-save": true,
+    "font-size": "13",
+    "font-family": "Arial",
     "text-direction": "ltr",
-    "showWhiteSpaces": true,
     "replaceTabWithSpaces": true,
-    "spacesPerTab": 2
+    "spacesPerTab": 4,
+    "showWhiteSpaces": true
 }
