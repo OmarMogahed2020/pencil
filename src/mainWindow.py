@@ -401,9 +401,11 @@ class MainWindow:
         fontCombo = dialog.findChild(QComboBox, "fontComboBox")
         showWhiteSpacesCheck = dialog.findChild(QCheckBox, "whiteSpacesCheck")
         replaceTabWithSpacesCheck = dialog.findChild(QCheckBox, "replaceTabWithSpacesCheck")
+        numberOfSpacesOfTabSpinCheck = dialog.findChild(QSpinBox, "numberOfSpacesOfTabSpin")
 
         if self.getCurrentPreferences()["replaceTabWithSpaces"] is True:
             replaceTabWithSpacesCheck.setChecked(True)
+        numberOfSpacesOfTabSpinCheck.setValue(self.getCurrentPreferences()["spacesPerTab"])
 
         def enableOrDisable():
             replaceTabWithSpacesCheck = dialog.findChild(QCheckBox, "replaceTabWithSpacesCheck")
