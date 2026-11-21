@@ -108,67 +108,6 @@ QStatusBar::item {
     border: none;
 }
 
-/* ---- Buttons: modern glass ---- */
-QPushButton,
-QDialogButtonBox QPushButton,
-QDialog QPushButton,
-QFileDialog QPushButton,
-QMessageBox QPushButton {
-    background-color: qlineargradient(
-        x1: 0, y1: 0, x2: 0, y2: 1,
-        stop: 0 #dbc4fc,
-        stop: 0.55 #caa9fa,
-        stop: 1 #d7bdfb
-    );
-    color: #16181d;
-    border: 1px solid #8467ae;
-    border-top: 1px solid #dec9fc;
-    border-radius: 10px;
-    padding: 7px 22px;
-    min-width: 88px;
-    font-size: 10pt;
-    font-weight: 600;
-}
-
-QPushButton:hover {
-    background-color: qlineargradient(
-        x1: 0, y1: 0, x2: 0, y2: 1,
-        stop: 0 #dbc4fc,
-        stop: 0.55 #dbc4fb,
-        stop: 1 #dec9fc
-    );
-    border: 1px solid #dec9fc;
-}
-
-QPushButton:pressed {
-    background-color: qlineargradient(
-        x1: 0, y1: 0, x2: 0, y2: 1,
-        stop: 0 #ceb5f1,
-        stop: 0.55 #c2aae2,
-        stop: 1 #c2aae2
-    );
-    border: 1px solid #715895;
-    padding-top: 8px;
-    padding-bottom: 6px;
-}
-
-QPushButton:focus {
-    border: 1px solid #ebdffd;
-}
-
-QPushButton:disabled {
-    background-color: #efe8f3;
-    color: #9e9e9d;
-    border: 1px solid #efe8f3;
-}
-
-QPushButton::menu-indicator {
-    width: 9px;
-    height: 9px;
-    subcontrol-position: center right;
-    right: 10px;
-}
-
 QFileDialog {
     background-color: #f8f8f2;
     color: #282a36;
