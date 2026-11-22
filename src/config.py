@@ -22,6 +22,9 @@ STYLE_LIGHT_NORD = "STYLE LIGHT NORD"
 STYLE_LIGHT_SOLARIZED = "STYLE LIGHT SOLARIZED"
 STYLE_LIGHT_GITHUB = "STYLE LIGHT GITHUB"
 
+STYLE_DIALOG_WINDOW_DARK = "DIALOG WINDOW DARK"
+STYLE_DIALOG_WINDOW_LIGHT = "DIALOG LIGHT STYLE"
+
 DATA_PREFERENCES_JSON = "DATA PREFERENCES JSON"
 
 DEFAULT_PREFERENCES = """{
@@ -50,6 +53,8 @@ ASSETS = {
     STYLE_LIGHT_NORD: baseDir / "assets" / "styles" / "light-nord-theme.qss",
     STYLE_LIGHT_SOLARIZED: baseDir / "assets" / "styles" / "light-solarized-theme.qss",
     STYLE_LIGHT_GITHUB: baseDir / "assets" / "styles" / "light-github-theme.qss",
+    STYLE_DIALOG_WINDOW_DARK: baseDir / "assets" / "styles" / "popUps" / "preferences-dark.qss",
+    STYLE_DIALOG_WINDOW_LIGHT: baseDir / "assets" / "styles" / "popUps" / "preferences-light.qss",
     DATA_PREFERENCES_JSON: baseDir / "data" / "preferences.json",
     ICON_APP_ICON: baseDir / "assets" / "icons" / "pencilIcon.png",
 }
@@ -75,3 +80,8 @@ def savePreferences(preferences):
     path = ASSETS[DATA_PREFERENCES_JSON]
     with open(path, mode="w") as file:
         json.dump(preferences, file, indent=4)
+
+def resetPreferences():
+    path = ASSETS[DATA_PREFERENCES_JSON]
+    with open(path, mode="w") as file:
+        file.write(DEFAULT_PREFERENCES)

@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QStatusBar,
     QHBoxLayout,
     QCheckBox,
+    QPushButton,
 )
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QTimer, QFileSystemWatcher, Qt, QEvent, QObject
@@ -403,6 +404,14 @@ class MainWindow:
         replaceTabWithSpacesCheck = dialog.findChild(QCheckBox, "replaceTabWithSpacesCheck")
         numberOfSpacesOfTabSpinCheck = dialog.findChild(QSpinBox, "numberOfSpacesOfTabSpin")
 
+        # make the style of the Dialog window itself
+        dialogTheme = STYLE_DIALOG_WINDOW_DARK if "dark" in self.getCurrentPreferences()["theme"] else STYLE_DIALOG_WINDOW_LIGHT
+        with open(ASSETS[dialogTheme], mode="r") as file:
+            dialog.setStyleSheet(file.read())
+
+        dialog.findChild(QPushButton, "resetButton").clicked.connect(lambda: self.resetPreferencesInDialog(dialog))
+
+
         if self.getCurrentPreferences()["replaceTabWithSpaces"] is True:
             replaceTabWithSpacesCheck.setChecked(True)
         numberOfSpacesOfTabSpinCheck.setValue(self.getCurrentPreferences()["spacesPerTab"])
@@ -462,6 +471,12 @@ class MainWindow:
 
         if self.getCurrentPreferences()["showWhiteSpaces"] is True:
             showWhiteSpacesCheck.setChecked(True)
+
+    def resetPreferencesInDialog(self, dialog):
+        # it reset it AND doesn't close the dialog window in it's own
+        resetPreferences()
+        self.applyPreferences(self.getCurrentPreferences())
+        self.initPreferencesDialog(dialog)
 
     def applyPreferences(self, preferences):
 

@@ -1,0 +1,232 @@
+/* Light Preferences Dialog Styling - Only for widgets in preferencesWindow.ui */
+
+QDialog {
+    background-color: #1e1e1e;
+    color: #e1e4e8;
+}
+
+QLabel {
+    color: #e1e4e8;
+}
+
+QCheckBox {
+    color: #e1e4e8;
+    spacing: 8px;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #6b7280;
+    border-radius: 10px;
+    background-color: #1e1e1e;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #c48e8e;
+}
+
+QCheckBox::indicator:pressed {
+    background-color: #3a2a2a;
+}
+
+QCheckBox::indicator:disabled {
+    border: 2px solid #3e444c;
+    background-color: #2b3038;
+}
+
+QComboBox {
+    background-color: #1e1e1e;
+    color: #e1e4e8;
+    border: 1px solid #3e444c;
+    border-radius: 4px;
+    padding: 4px 28px 4px 8px;
+    width: 142px;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 24px;
+    border-left: 1px solid #3e444c;
+    background-color: #2b3038;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+QComboBox::drop-down:hover {
+    background-color: #3a2a2a;
+}
+
+QComboBox::down-arrow {
+    width: 8px;
+    height: 8px;
+    background-color: transparent;
+    image: url(assets/icons/darkDownArrow.svg);
+}
+
+QComboBox QAbstractItemView {
+    background-color: #1e1e1e;
+    color: #e1e4e8;
+    border: 1px solid #3e444c;
+    selection-background-color: #c48e8e;
+    selection-color: #1e1e1e;
+    outline: none;
+}
+
+QComboBox QAbstractItemView::item {
+    padding: 6px 12px;
+    border: none;
+}
+
+QComboBox QAbstractItemView::item:selected {
+    background-color: #c48e8e;
+    color: #1e1e1e;
+}
+
+QComboBox QAbstractItemView::item:hover {
+    background-color: #2b3038;
+}
+
+QSpinBox {
+    background-color: #1e1e1e;
+    color: #e1e4e8;
+    border: 1px solid #3e444c;
+    border-radius: 4px;
+    padding: 4px 24px 4px 8px;
+    min-width: 80px;
+}
+
+QSpinBox:disabled {
+    color: #888888;
+}
+
+QSpinBox::up-button {
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+    width: 16px;
+    border-left: 1px solid #3e444c;
+    background-color: #2b3038;
+    border-top-right-radius: 3px;
+}
+
+QSpinBox::up-button:hover {
+    background-color: #3a2a2a;
+}
+
+QSpinBox::down-button {
+    subcontrol-origin: border;
+    subcontrol-position: bottom right;
+    width: 16px;
+    border-left: 1px solid #3e444c;
+    background-color: #2b3038;
+    border-bottom-right-radius: 3px;
+}
+
+QSpinBox::down-button:hover {
+    background-color: #3a2a2a;
+}
+
+QSpinBox::up-arrow {
+    width: 10px;
+    height: 8px;
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    background-color: transparent;
+    image: url(assets/icons/darkUpArrow.svg);
+}
+
+QSpinBox::down-arrow {
+    width: 10px;
+    height: 8px;
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    background-color: transparent;
+    image: url(assets/icons/darkDownArrow.svg);
+}
+
+QPushButton {
+    background-color: qlineargradient(
+        x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 #2b3038,
+        stop: 1 #24292f
+    );
+    color: #e1e4e8;
+    border: 1px solid #3e444c;
+    border-radius: 6px;
+    padding: 6px 16px;
+    min-width: 80px;
+    font-size: 9pt;
+    font-weight: 500;
+}
+
+QPushButton:hover {
+    background-color: qlineargradient(
+        x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 #3a2a2a,
+        stop: 1 #352525
+    );
+}
+
+QPushButton:pressed {
+    background-color: qlineargradient(
+        x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 #352525,
+        stop: 1 #2f2020
+    );
+    padding-top: 7px;
+    padding-bottom: 5px;
+}
+
+QPushButton:focus {
+    outline: none;
+}
+
+QPushButton:disabled {
+    background-color: #2b3038;
+    color: #6e7681;
+    border: 1px solid #3e444c;
+}
+
+QDialogButtonBox QPushButton {
+    background-color: qlineargradient(
+        x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 #2b3038,
+        stop: 1 #24292f
+    );
+    color: #e1e4e8;
+    border: 1px solid #3e444c;
+    border-radius: 6px;
+    padding: 6px 20px;
+    min-width: 80px;
+    font-size: 9pt;
+    font-weight: 500;
+}
+
+QDialogButtonBox QPushButton:hover {
+    background-color: qlineargradient(
+        x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 #3a2a2a,
+        stop: 1 #352525
+    );
+}
+
+QDialogButtonBox QPushButton:pressed {
+    background-color: qlineargradient(
+        x1: 0, y1: 0, x2: 0, y2: 1,
+        stop: 0 #352525,
+        stop: 1 #2f2020
+    );
+    padding-top: 7px;
+    padding-bottom: 5px;
+}
+
+QDialogButtonBox QPushButton:focus {
+    outline: none;
+}
+
+QDialogButtonBox QPushButton:disabled {
+    background-color: #2b3038;
+    color: #6e7681;
+    border: 1px solid #3e444c;
+}
