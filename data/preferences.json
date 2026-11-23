@@ -1,10 +1,10 @@
 {
-    "auto-save": false,
     "theme": "dark-theme",
-    "font-size": "13",
-    "font-family": "Arial",
+    "font-size": 13,
+    "font-family": "Andale Mono",
+    "auto-save": false,
     "text-direction": "ltr",
+    "showWhiteSpaces": true,
     "replaceTabWithSpaces": true,
-    "spacesPerTab": 4,
-    "showWhiteSpaces": true
+    "spacesPerTab": 4
 }

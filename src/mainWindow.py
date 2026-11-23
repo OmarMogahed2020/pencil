@@ -297,7 +297,7 @@ class MainWindow:
         editor.document().setDefaultTextOption(opt)
         editor.setHtml('<div dir="rtl"></div>')
 
-        editor.setText(oldText)
+        editor.setPlainText(oldText)
 
         numberLine = self.window.findChild(QTextEdit, "numberLine")
         numberLine.setLayoutDirection(Qt.LeftToRight)
@@ -329,7 +329,7 @@ class MainWindow:
         editor.document().setDefaultTextOption(opt)
         editor.setHtml('<div dir="ltr"></div>')
 
-        editor.setText(oldText)
+        editor.setPlainText(oldText)
 
         numberLine = self.window.findChild(QTextEdit, "numberLine")
         numberLine.setLayoutDirection(Qt.RightToLeft)
@@ -415,7 +415,6 @@ class MainWindow:
 
         dialog.findChild(QPushButton, "resetButton").clicked.connect(lambda: self.resetPreferencesInDialog(dialog))
 
-
         if self.getCurrentPreferences()["replaceTabWithSpaces"] is True:
             replaceTabWithSpacesCheck.setChecked(True)
         numberOfSpacesOfTabSpinCheck.setValue(self.getCurrentPreferences()["spacesPerTab"])
@@ -468,7 +467,7 @@ class MainWindow:
         themeCombo.setCurrentText(theme_key_to_display[self._currentTheme])
 
         if fontCombo:
-            fontFamily = getattr(self, "_currentFontFamily", "Arial")
+            fontFamily = getattr(self, "_currentFontFamily", "Andale Mono")
             index = fontCombo.findText(fontFamily)
             if index >= 0:
                 fontCombo.setCurrentIndex(index)
@@ -508,21 +507,26 @@ class MainWindow:
         }
         self.setColorTheme(theme_map.get(theme, STYLE_DARK_THEME))
 
-        direction = preferences.get("text-direction", "ltr")
-        if direction == "rtl":
-            self.setRtl()
-        else:
-            self.setLtr()
-
         autoSave = preferences.get("auto-save", False)
         action = self.window.findChild(QAction, "actionAutoSave")
         if action:
             action.setChecked(autoSave)
 
         self.applyFontSize(int(preferences.get("font-size", 13)))
-        self.applyFontFamily(preferences.get("font-family", "Arial"))
+        self.applyFontFamily(preferences.get("font-family", "Andale Mono"))
+
+        self.window.setStyleSheet(self.window.styleSheet())  # just to update the textEdit's dots and arrows on the font change
+
         if hasattr(self, "_charHandler"):
             self._charHandler.tabReplacement = " " * preferences["spacesPerTab"] if preferences["replaceTabWithSpaces"] else "\t"
+
+        # should be after setting the font size
+        direction = preferences.get("text-direction", "ltr")
+        if direction == "rtl":
+            self.setRtl()
+        else:
+            self.setLtr()
+        textEdit = self.window.findChild(QTextEdit, "textEdit")
 
         metrics = QFontMetrics(textEdit.font())
         width = metrics.horizontalAdvance(" ")
@@ -621,7 +625,7 @@ class MainWindow:
             }
             preferences["theme"] = theme_slug_map.get(getattr(self, "_currentTheme", STYLE_DARK_THEME), "dark-theme")
             preferences["font-size"] = getattr(self, "_currentFontSize", 13)
-            preferences["font-family"] = getattr(self, "_currentFontFamily", "Arial")
+            preferences["font-family"] = getattr(self, "_currentFontFamily", "Andale Mono")
             preferences["text-direction"] = self.textDirection
             action = self.window.findChild(QAction, "actionAutoSave")
             preferences["auto-save"] = action.isChecked() if action and preferences["auto-save"] else False

@@ -31,7 +31,7 @@ DEFAULT_PREFERENCES = """{
     "auto-save": false,
     "theme": "dark-theme",
     "font-size": "13",
-    "font-family": "Arial",
+    "font-family": "Andale Mono",
     "text-direction": "ltr",
     "replaceTabWithSpaces": true,
     "spacesPerTab": 4,
@@ -80,6 +80,7 @@ def savePreferences(preferences):
     path = ASSETS[DATA_PREFERENCES_JSON]
     with open(path, mode="w") as file:
         json.dump(preferences, file, indent=4)
+
 
 def resetPreferences():
     path = ASSETS[DATA_PREFERENCES_JSON]
