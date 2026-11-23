@@ -7,7 +7,8 @@ import sys
 if __name__ == "__main__":
     userPreferences = loadPreferences()
 
-    application = QApplication()
+    sys.argv[0] = "pencil"
+    application = QApplication(sys.argv)
     application.setWindowIcon(QIcon(fileName=ASSETS[ICON_APP_ICON]))
     mainWindow = MainWindow(sys.argv[1] if len(sys.argv) > 1 else None)
     mainWindow.show()
