@@ -290,6 +290,7 @@ class MainWindow:
 
         editor.setLayoutDirection(Qt.RightToLeft)
         opt = QTextOption()
+        opt.setWrapMode(QTextOption.WrapMode.NoWrap)
         opt.setTextDirection(Qt.RightToLeft)
         if preferences["showWhiteSpaces"] is True:
             opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
@@ -301,6 +302,7 @@ class MainWindow:
         numberLine = self.window.findChild(QTextEdit, "numberLine")
         numberLine.setLayoutDirection(Qt.LeftToRight)
         opt = QTextOption()
+        opt.setWrapMode(QTextOption.WrapMode.NoWrap)
         opt.setTextDirection(Qt.LeftToRight)
         if preferences["showWhiteSpaces"] is True:
             opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
@@ -320,6 +322,7 @@ class MainWindow:
 
         editor.setLayoutDirection(Qt.LeftToRight)
         opt = QTextOption()
+        opt.setWrapMode(QTextOption.WrapMode.NoWrap)
         opt.setTextDirection(Qt.LeftToRight)
         if preferences["showWhiteSpaces"] is True:
             opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
@@ -331,6 +334,7 @@ class MainWindow:
         numberLine = self.window.findChild(QTextEdit, "numberLine")
         numberLine.setLayoutDirection(Qt.RightToLeft)
         opt = QTextOption()
+        opt.setWrapMode(QTextOption.WrapMode.NoWrap)
         opt.setTextDirection(Qt.RightToLeft)
         if preferences["showWhiteSpaces"] is True:
             opt.setFlags(opt.flags() | QTextOption.ShowTabsAndSpaces)
